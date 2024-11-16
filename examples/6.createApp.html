@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <!-- composition组合式api 写成一个个的hook 整合在一起 -->
+    <!-- vue3有5大模块 runtime-dom -> runtime-core -> reactivity(不能编译模板) -->
+    <!-- runtime-dom这个模块主要放的是dom api -->
+    <script src="../packages/runtime-dom/dist/runtime-dom.global.js"></script>
+    <div id="app"></div>
+    <script>
+      let { createApp, reactive, ref, h } = VueRuntimeDOM;
+      function useCounter() {
+        const count = ref(1);
+        const add = () => {
+          count.value++;
+        };
+        return {
+          add,
+          count,
+        };
+      }
+      let App = {
+        // getCurrentInstance = > instance
+        setup(props, context) {
+          // instance 里面包含的内容 会提取一些传递给context
+          let state = reactive({ name: 'pf' });
+          let { count, add } = useCounter();
+          let fn = function () {
+            state.name = 'jw';
+            state.name = 'pf';
+            state.name = 'jw';
+            state.name = 'pf';
+          };
+          return () => {
+            h('div', { a: 1 });
+            h('div', {}, 'helloworld');
+            h('div', {}, h('span'));
+            h('div', h('span'));
+            h('div', [h('span'), h('span')]);
+            h('div', null, h('span'), h('span'));
+            h('div', null, 'a', 'b', 'c');
+            return h('div', { onClick: add }, count.value); // 创建虚拟节点
+          };
+        },
+      };
+      // createApp就是将虚拟节点 变成真实节点 最后插入到元素中
+      let app = createApp(App, { name: 'pf', age: 12 });
+      app.mount('#app');
+    </script>
+  </body>
+</html>

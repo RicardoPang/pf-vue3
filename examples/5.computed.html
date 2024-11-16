@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <script src="../packages/reactivity/dist/reactivity.global.js"></script>
+    <div id="app"></div>
+    <script>
+      let { effect, reactive, ref, shallowRef, toRef, toRefs, computed } =
+        VueReactivity;
+      // 缓存  computed  effect(lazy) + scheduler + 缓存的标识
+
+      const proxy = reactive({ name: 'pf', age: 22 });
+
+      const age = ref(18);
+      // 计算属性也是一个effect, age胡搜集计算属性的effect
+      const myAge = computed(() => {
+        // 此方法默认不会被执行
+        console.log('runner');
+        return age.value * 2;
+      });
+      // const myAge = computed({
+      //     get(){},
+      //     set(){}
+      // })
+
+      // 当访问属性的时候执行
+      //   console.log(myAge.value);
+      //   console.log(myAge.value); // 缓存
+
+      //   age.value = 100; // 更新age，myAge不会立刻重新计算
+      //   console.log(myAge.value); // 再次计算最新值
+
+      effect(() => {
+        // 此effect中没有age
+        console.log(myAge.value); // 计算属性有收集依赖的功能 可以收集effect
+      });
+      age.value = 500;
+
+      // age会收集computed, computed会收集他所在的effect
+      // 更新 age -> computed effect (dirty = true) 触发计算属性对应的effect让他执行
+    </script>
+  </body>
+</html>

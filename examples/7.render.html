@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <script src="../packages/runtime-dom/dist/runtime-dom.global.js"></script>
+    <div id="app"></div>
+    <script>
+      // 组件化的特点: 属性 插槽 时间
+      let { createApp, reactive, ref, h, toRefs } = VueRuntimeDOM;
+      console.log(h);
+      // 代码在浏览器中跑 没有把模板编译成render函数的能力
+      let App = {
+        setup(props, context) {
+          // vnode替换掉原有的beforeCreate方法
+          const state = reactive({ name: 'zf', age: 12 });
+          const flag = ref(true);
+          // const handleClick = () => {
+          //   flag.value = false;
+          // };
+          setTimeout(() => {
+            flag.value = false;
+            flag.value = true;
+            flag.value = false;
+            flag.value = true;
+            flag.value = false;
+          }, 1000);
+          return {
+            ...toRefs(state),
+            flag,
+          };
+        },
+        // 如果setup中返回的是对象 那么这个对象会被用于渲染使用
+        // 如果返回的是函数 会作为render返回
+        // render(proxy) {
+        //   console.log(this.a);
+        //   // vue2中参数是h vue3中参数是proxy 和this指向同一个地址
+        //   return h('div', {}, [
+        //     h('p', { style: { color: 'red' } }, 'hello world'),
+        //   ]);
+        // },
+        render({ name, age, flag }) {
+          if (flag.value) {
+            return h('div', [
+              h('li', { key: 'A' }, 'A'),
+              h('li', { key: 'B' }, 'B'),
+              h('li', { key: 'C' }, 'C'),
+              h('li', { key: 'D' }, 'D'),
+              h('li', { key: 'E' }, 'E'),
+              h('li', { key: 'F' }, 'F'),
+              h('li', { key: 'G' }, 'G'),
+            ]);
+          } else {
+            return h('div', [
+              h('li', { key: 'A' }, 'A'),
+              h('li', { key: 'B' }, 'B'),
+              h('li', { key: 'E' }, 'E'),
+              h('li', { key: 'C' }, 'C'),
+              h('li', { key: 'D' }, 'D'),
+              h('li', { key: 'H' }, 'H'),
+              h('li', { key: 'F' }, 'F'),
+              h('li', { key: 'G' }, 'G'),
+            ]);
+          }
+        },
+      };
+      let app = createApp(App, { name: 'pf', age: 12 });
+      app.mount('#app');
+    </script>
+  </body>
+</html>
