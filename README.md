@@ -3,7 +3,7 @@
 - 拉取项目
 
 ```shell
-git clone
+git clone https://github.com/RicardoPang/pf-vue3.git
 ```
 
 - 安装依赖
@@ -23,6 +23,15 @@ npm run dev
 ```shell
 打开examples下的html文件进行查看和调试
 ```
+
+## Vue3 设计思想
+
+- 声明式框架
+  > 声明式代码更加简单 不需要关注实现 按照要求填代码就可以
+- 采用虚拟 DOM
+  > 虚拟 DOM 就是一个对象 用来描述真实 DOM 的 可以比较新旧虚拟节点 找到变化再进行更新
+- 区分编译时和运行时
+  > 专门写个编译时可以将模板编译成虚拟 DOM (在哦古剑的时候进行编译性能更高 不需要在运行的时候进行编译 Vue3 在编译中做了很多优化)
 
 ## Vue3 和 Vue2 的区别
 
@@ -76,3 +85,75 @@ block -> v-for 不收集动态节点了
 ## patchFlags 对不同的动态节点进行描述
 
 > 表示要比对哪些类型
+
+## 求最长递增子序列的个数
+
+1. 思路就是当前这一项比我们最后一项大则直接放到末尾
+2. 如果当前这一项比最后一项小, 需要在序列中通过二分查找找到比当前大的这一项 用它来替换掉
+3. 最优的情况, 就是默认递增
+
+```js
+function getSequence(arr) {
+  const len = arr.length;
+  const result = [0]; // 以默认第0个为基准做序列
+  const p = new Array(len).fill(0); // 最后要标记索引 放的东西不用关心 但是要和数组一样长
+
+  let start;
+  let end;
+  let middle;
+  let resultlastIndex;
+  for (let i = 0; i < len; i++) {
+    let arrI = arr[i];
+    if (arrI !== 0) {
+      // 因为vue里面的序列中0意味着没有意义需要创建
+      resultlastIndex = result[result.length - 1];
+      if (arr[resultlastIndex] < arrI) {
+        // 比较最后一项和当前项的值 如果比最后一项大 则将当前的索引放到结果集中
+        result.push(i);
+
+        p[i] = resultlastIndex; //当前放到末尾的要记住它前面的那个人是谁
+        continue;
+      }
+
+      // 这里我们需要通过二分查找 在结果几种找到比当前值大的 用当前值的索引将其替换掉
+      // 递增序列 采用二分查找是最快的
+      start = 0;
+      end = result.length - 1;
+      while (start < end) {
+        // start === end 的时候就停止了 这个二分查找在找索引
+        middle = ((start + end) / 2) | 0;
+
+        if (arr[result[middle]] < arrI) {
+          start = middle + 1;
+        } else {
+          end = middle;
+        }
+      }
+      // 找到中间值之后 我们需要做替换操作 start / end
+      if (arr[result[end]] > arrI) {
+        result[end] = i; // 这里用当前这一项 替换掉已有的比当前大的那一项 更有潜力的我需要它
+
+        p[i] = result[end - 1]; // 记住它的前一个人是谁
+      }
+    }
+  }
+
+  // 1.默认追加
+  // 2.替换
+  // 3.记住每个人的前驱节点
+
+  // 通过最后一项进行回溯
+  let i = result.length;
+  let last = result[i - 1]; // 找到最后一项了
+  while (i-- > 0) {
+    // 倒序追溯
+    result[i] = last; // 最后一项是确定的
+    last = p[last];
+  }
+
+  return result;
+}
+// console.log(getSequence([1, 2, 3, 4, 5, 6, 7, 0]));
+// console.log(getSequence([3, 2, 8, 9, 5, 6, 7, 11, 15, 4]));
+console.log(getSequence([2, 3, 1, 5, 6, 8, 7, 9, 4]));
+```

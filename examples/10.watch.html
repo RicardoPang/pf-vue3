@@ -22,9 +22,9 @@
         { immediate: true, flush: 'post' }
       );
 
-      // watchEffect(() => {
-      //   console.log(state.count); // 依赖的人变化了 直接就执行了 -> effect (有异步更新的逻辑)
-      // });
+      watchEffect(() => {
+        console.log(state.count); // 依赖的人变化了 直接就执行了 -> effect (有异步更新的逻辑)
+      });
 
       setTimeout(() => {
         state.count++;

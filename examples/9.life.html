@@ -23,7 +23,7 @@
         onUpdated,
       } = VueRuntimeDOM;
 
-      //   在调用setup之前先将实例暴露到全局上 之后调用setup 内部会调用生命周期 调用的时候getCurrentInstance 拿到的就是刚才放到全局上的
+      // 在调用setup之前先将实例暴露到全局上 之后调用setup 内部会调用生命周期 调用的时候getCurrentInstance 拿到的就是刚才放到全局上的
       let App = {
         setup(props, context) {
           let state = reactive({ flag: true });

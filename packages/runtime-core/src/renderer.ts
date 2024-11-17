@@ -206,30 +206,33 @@ export function createRenderer(rendererOptions) {
       // 接下来有了映射表之后 我们要知道哪些可以被patch 哪些不能
 
       // 计算有几个需要被patch
-      const toBePatched = e2 - s2 + 1;
-      const newIndexToOldIndexMap = new Array(toBePatched).fill(0);
+      const toBePatched = e2 - s2 + 1; // 新的总个数
+      const newIndexToOldIndexMap = new Array(toBePatched).fill(0); // 一个记录是否对比过的映射表
 
       // 去老的里面查找 看有没有复用的
       for (let i = s1; i <= e1; i++) {
         // 循环老的将老的索引记录到newIndexToOldIndexMap(根据索引进行查找)
         const oldVnode = c1[i]; // 老的虚拟节点 通过老的key去新的映射表里进行查找 如果有就复用
-        let newIndex = keyToNewIndexMap.get(oldVnode.key); // 新的索引
+        let newIndex = keyToNewIndexMap.get(oldVnode.key); // 新的索引 用老的孩子去新的里面找
 
         if (newIndex === undefined) {
           // 用老的去新的找 新的里面没有 删除掉这个节点
-          unmount(oldVnode);
+          unmount(oldVnode); // 多余的删掉
         } else {
-          // 这里用新索引的时候 需要减去开头的长度
-          newIndexToOldIndexMap[newIndex - s2] = i + 1; // 构建新的索引和老的索引的关系
+          // 这里用新索引的时候 需要减去开头的长度 (新的位置对应的老的位置 如果数组里放的值 >0 说明已经patch过了)
+          newIndexToOldIndexMap[newIndex - s2] = i + 1; // 构建新的索引和老的索引的关系 (用来标记当前所patch过得结构)
           // 新老的比对 比较完毕后位置有差异
           patch(oldVnode, c2[newIndex], el);
           // 如果里面的值是0的话说明新的有老的没有 而且数组里面会记录新的对应老的索引
         }
-      }
+      } // 到这这是新老属性和儿子的比对 没有移动位置
 
+      // 获取最长递增子序列
       let increasingNewIndexSequence = getSequence(newIndexToOldIndexMap);
+      console.log(increasingNewIndexSequence, '-----');
 
       let j = increasingNewIndexSequence.length - 1; // 取出最后一个人的索引
+      // 需要移动位置
       for (let i = toBePatched - 1; i >= 0; i--) {
         let currentIndex = i + s2; // 获取h位置
         let childVNode = c2[currentIndex]; // 找到h对应的节点
@@ -237,12 +240,14 @@ export function createRenderer(rendererOptions) {
           currentIndex + 1 < c2.length ? c2[currentIndex + 1].el : null;
         // 如果以前不存在这个节点就创造出来 进行插入操作
         if (newIndexToOldIndexMap[i] === 0) {
-          // 如果自己是0说明没有被patch过
+          // 创建 如果自己是0说明没有被patch过
           patch(null, childVNode, el, anchor);
         } else {
+          // 不是0 说明是已经比对过属性和儿子了
           if (i !== increasingNewIndexSequence[j]) {
-            hostInsert(childVNode.el, el, anchor); // dom操作具有移动性 肯定用的是以前的 但是都做了一遍重新插入
+            hostInsert(childVNode.el, el, anchor); // 复用了节点 dom操作具有移动性 肯定用的是以前的 但是都做了一遍重新插入
           } else {
+            console.log('这里不做插入了');
             j--; // 跳过不需要移动的元素 为了减少移动操作 需要这个最长递增子序列算法
           }
         }
@@ -358,14 +363,15 @@ export function createRenderer(rendererOptions) {
   };
   // -----------------文本处理-----------------
   const patch = (n1, n2, container, anchor = null) => {
+    // 核心的patch方法
     // 针对不同类型 做初始化操作
     const { shapeFlag, type } = n2;
 
-    // 不是初始化才比较两个节点是不是同一个节点
+    // 不是初始化才比较两个节点是不是同一个节点 (判断两个元素是否相同 不相同卸载再添加)
     if (n1 && !isSameVNode(n1, n2)) {
       // 把以前的删掉 换成n2
       anchor = hostNextSibling(n1.el);
-      unmount(n1);
+      unmount(n1); // 删除老的
       n1 = null; // 如果n1为空则直接重新渲染
     }
 
