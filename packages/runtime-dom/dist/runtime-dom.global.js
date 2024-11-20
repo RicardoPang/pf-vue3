@@ -894,26 +894,52 @@ var VueRuntimeDOM = (function (exports) {
           }
           return result;
       } // O(nlogn) 性能比较好 O(n^2)
+      const unmountChildren = (children) => {
+          for (let i = 0; i < children.length; i++) {
+              unmount(children[i]);
+          }
+      };
       const patchChildren = (n1, n2, el) => {
-          // 做两个虚拟节点的儿子比较
-          const c1 = n1.children;
+          const c1 = n1.children; // 新老儿子
           const c2 = n2.children;
-          // 老的有儿子新的没儿子 新的有儿子老的没儿子 新老都有儿子 新老都是文本
+          // 老的有儿子 新的没儿子  新的有儿子老的没儿子  新老都有儿子  新老都是文本
           const prevShapeFlag = n1.shapeFlag;
-          const shapeFlag = n2.shapeFlag;
+          const shapeFlag = n2.shapeFlag; // 分别标识过儿子的状况
           if (shapeFlag & 8 /* ShapeFlags.TEXT_CHILDREN */) {
-              hostSetElementText(el, c2); // 直接干掉以前的
+              // case1:现在是文本之前是数组
+              // 老的是n个孩子 但是新的是文本
+              if (prevShapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) {
+                  unmountChildren(c1); // 如果c1 中包含组件会调用组件的销毁方法
+              }
+              // 两个人都是文本情况
+              if (c2 !== c1) {
+                  // case2：两个都是文本
+                  hostSetElementText(el, c2);
+              }
           }
           else {
-              // 现在是数组
+              // 现在是数组   上一次有可能是文本 或者数组
               if (prevShapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) {
-                  // 两个都是数组
-                  patchKeyedChildren(c1, c2, el);
+                  // case3:两个都是数组
+                  if (shapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) {
+                      // 当前是数组 之前是数组
+                      // 两个数组的比对  -》 diff算法  ***********************
+                      patchKeyedChildren(c1, c2, el);
+                  }
+                  else {
+                      // 没有孩子  特殊情况 当前是null ， 删除掉老的
+                      unmountChildren(c1);
+                  }
               }
               else {
-                  // 之前的是文本 现在是数组
-                  hostSetElementText(el, '');
-                  mountChildren(c2, el);
+                  // 上一次是文本
+                  if (prevShapeFlag & 8 /* ShapeFlags.TEXT_CHILDREN */) {
+                      // case4 现在是数组 之前是文本
+                      hostSetElementText(el, '');
+                  }
+                  if (shapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) {
+                      mountChildren(c2, el);
+                  }
               }
           }
       };
@@ -1120,7 +1146,7 @@ var VueRuntimeDOM = (function (exports) {
           }
           else {
               // 以前绑定了 但是没有value
-              el.removeremoveEventListener(eventName, exists);
+              el.removeEventListener(eventName, exists);
               invokers[key] = undefined;
           }
       }

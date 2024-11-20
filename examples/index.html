@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <script src="../packages/runtime-dom/dist/runtime-dom.global.js"></script>
+    <div id="app"></div>
+    <script>
+      // 组件化的特点: 属性 插槽 时间
+      let { createApp, reactive, ref, h, toRefs } = VueRuntimeDOM;
+      console.log(h);
+      let App = {
+        setup(props, context) {
+          const state = reactive({ name: 'pf', age: 12 });
+          const flag = ref(true);
+          setTimeout(() => {
+            flag.value = false;
+            flag.value = true;
+            flag.value = false;
+            flag.value = true;
+            flag.value = false;
+          }, 1000);
+          return {
+            ...toRefs(state),
+            flag,
+          };
+        },
+        render({ name, age, flag }) {
+          if (flag.value) {
+            return h('div', [
+              h('li', { key: 'a' }, 'a'),
+              h('li', { key: 'b' }, 'b'),
+            ]);
+          } else {
+            return h('div');
+          }
+        },
+      };
+      let app = createApp(App, { name: 'pf', age: 12 });
+      app.mount('#app');
+    </script>
+  </body>
+</html>

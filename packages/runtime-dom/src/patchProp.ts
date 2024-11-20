@@ -45,7 +45,7 @@ const patchEvent = (el, key, value) => {
       el.addEventListener(eventName, invoker);
     } else {
       // 以前绑定了 但是没有value
-      el.removeremoveEventListener(eventName, exists);
+      el.removeEventListener(eventName, exists);
       invokers[key] = undefined;
     }
   }
